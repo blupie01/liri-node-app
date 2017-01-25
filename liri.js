@@ -14,7 +14,7 @@ var twitterKeys = keyFile.twitterKeys;
 var command = process.argv[2];
 
 // var for request
-var userRequest = "";
+var userRequest;
 // var to hold inputs if request is more than one word
 var requestArray = [];
 
@@ -25,7 +25,7 @@ if (command == "my-tweets" || command == "spotify-this-song" ||
     log("log.txt", command);
 }
 else {
-    console.log("Invalid command");
+    console.log("Invalid command.");
     log("error_log.txt", command);
     return;
 };
@@ -55,7 +55,6 @@ if (command == "my-tweets") {
     });
 
     client.get("statuses/user_timeline", function(err, tweets) {
-        if (err) throw err;
         if (!err) {
             for (var tweet = 0; tweet < tweets.length; tweet++) {
                 console.log(tweets[tweet].text);
@@ -64,8 +63,32 @@ if (command == "my-tweets") {
         else {
             throw err;
         };
-    })
+    });
 }
+
+if (command == "spotify-this-song") {
+    if (userRequest == "Undefined"){
+        spotify.search({ type: 'track', query: "The Sign" }, function(err, data) {
+            if ( err ) {
+                console.log('Error occurred: ' + err);
+                return;
+            }
+            else{
+                songInfo(data);
+            }
+        });
+    } else {
+        spotify.search({ type: 'track', query: userRequest }, function(err, data) {
+            if ( err ) {
+                console.log('Error occurred: ' + err);
+                return;
+            }
+            else{
+                songInfo(data);
+            }
+        });
+    }
+};
 
 // function to log commands to appropriate txt files
 // NOT PERFECT <-- revisit later
@@ -73,9 +96,27 @@ function log(file, command) {
     fs.appendFile(file, command + ", ", function(err) {
         if (err) {
             console.log(err);
+            return;
         }
         else {
             console.log("Appended to appropriate log.");
+        };
+    });
+};
+
+function songInfo() {
+    spotify.search({type: "track", query: userRequest}, function(err, data) {
+        if (err) {
+            console.log("Error: " + err);
+            log("error_log.txt", command + " Error: " + err);
+            return;
         }
-    })
+        else {
+            console.log(data);
+            console.log("Artist: " + data.tracks.items[0].artists[0].name);
+            console.log("Song Name: " + data.tracks.items[0].name);
+            console.log("Album: " + data.tracks.items[0].album.name);
+            console.log("Preview Link: " + data.tracks.items[0].external_urls.spotify);
+        };
+    });
 };
